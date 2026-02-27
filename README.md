@@ -1,66 +1,75 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# GreenIT
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Description**
+- **GreenIT** est une application de démonstration qui orchestre plusieurs microservices (webapp, api-gateway, position-tracker, position-simulator, queue, mongodb). Le dépôt contient la configuration Docker Compose pour un démarrage local et des manifests Kubernetes dans le dossier `k8s/` pour un déploiement en cluster.
 
-## About Laravel
+**Architecture**
+- **fleetman-webapp**: interface web (port 30080)
+- **fleetman-api-gateway**: passerelle API (port 30020)
+- **fleetman-position-tracker**: service de tracking (port 30010)
+- **fleetman-position-simulator**: simulateur de positions
+- **fleetman-queue**: broker (ActiveMQ) exposant 61616/8161
+- **fleetman-mongodb**: base MongoDB (port 27017)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Prérequis**
+- Docker et Docker Compose installés
+- (Pour Kubernetes) `kubectl` et un cluster (minikube, kind, ou un cluster distant)
+- Recuperer le code source sur github 
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Démarrage local (Docker Compose)**
+1. Ouvrez un terminal et placez-vous dans la racine du projet:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+```
+cd "c:\\Users\\Steve\\Downloads\\GreenIT-main 1\\GreenIT-main"
+```
 
-## Learning Laravel
+2. Démarrer tous les services en arrière-plan:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```
+docker-compose up -d
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+3. Vérifier les logs (ex. webapp):
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```
+docker-compose logs -f fleetman-webapp
+```
 
-## Laravel Sponsors
+4. Accéder aux services depuis l'hôte:
+- Webapp: http://localhost:30080
+- API Gateway: http://localhost:30020
+- Position Tracker: http://localhost:30010
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Ports exposés (depuis `docker-compose.yml`): 30080 (web), 30020 (api), 30010 (tracker), 61616/8161 (queue), 27017 (mongodb).
 
-### Premium Partners
+**Déploiement sur Kubernetes**
+1. Vérifier que votre cluster est prêt et que `kubectl` cible le bon contexte.
+2. Appliquer tous les manifests:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```
+kubectl apply -f k8s/
+```
 
-## Contributing
+3. Vérifier les ressources:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```
+kubectl get pods,svc -n default
+```
 
-## Code of Conduct
+Remarque: le manifest `fleetman-mongodb-deployment.yaml` crée un `PersistentVolumeClaim` nommé `mongo-pvc`. Assurez-vous que votre cluster a un provisioner de volumes dynamiques ou créez manuellement un PV adapté.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**Routes et logs**
+- Le projet Laravel fourni contient une route POST `/log/scene-view` (voir [routes/web.php](routes/web.php#L1)). Les logs pour la barre latérale sont envoyés sur le channel `sidebar`.
 
-## Security Vulnerabilities
+**Dépannage rapide**
+- Si un port est déjà utilisé, arrêtez le service local occupant le port ou modifiez `docker-compose.yml`.
+- Si Mongo n'arrive pas à démarrer sur Kubernetes, vérifiez le `PersistentVolume` et les permissions.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Contribuer**
+- Créez une branche feature, faites vos modifications puis ouvrez une pull request.
 
-## License
+**Fichiers utiles**
+- `docker-compose.yml` : orchestrateur local
+- `k8s/` : manifests Kubernetes
+- `routes/web.php` : routes Laravel exposées
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
