@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleetman-queue
+  labels:
+    app: fleetman-queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleetman-queue
+  template:
+    metadata:
+      labels:
+        app: fleetman-queue
+    spec:
+      volumes:
+      - name: activemq-config
+        configMap:
+          name: activemq-config
+      containers:
+      - name: fleetman-queue
+        image: supinfo4kube/queue:1.0.1
+        ports:
+        - containerPort: 61616
+        - containerPort: 8161
+        volumeMounts:
+        - name: activemq-config
+          mountPath: /opt/activemq/conf/activemq.xml
+          subPath: activemq.xml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-queue
+spec:
+  selector:
+    app: fleetman-queue
+  ports:
+  - name: stomp
+    protocol: TCP
+    port: 61616
+    targetPort: 61616
+  - name: web-console
+    protocol: TCP
+    port: 8161
+    targetPort: 8161
+  type: ClusterIP

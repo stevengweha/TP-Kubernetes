@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  fleetman-queue:
+    image: supinfo4kube/queue:1.0.1
+    ports:
+      - 8161:8161
+      - 61616:61616
+    networks:
+      - fleetman
+
+  fleetman-position-simulator:
+    image: supinfo4kube/position-simulator:1.0.1
+    depends_on:
+      - fleetman-queue
+    environment:
+      - SPRING_PROFILES_ACTIVE=local-microservice
+    networks:
+      - fleetman
+
+  fleetman-position-tracker:
+    image: supinfo4kube/position-tracker:1.0.1
+    ports:
+      - 30010:8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=local-microservice
+    networks:
+      - fleetman
+
+  fleetman-api-gateway:
+    image: supinfo4kube/api-gateway:1.0.1
+    ports:
+      - 30020:8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=local-microservice
+    networks:
+      - fleetman
+
+  fleetman-webapp:
+    image: supinfo4kube/web-app:1.0.0-dockercompose
+    ports:
+      - 30080:80
+    depends_on:
+      - fleetman-api-gateway
+    networks:
+      - fleetman
+
+  fleetman-mongodb:
+    image: mongo:3.6.23
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - fleetman
+
+networks:
+  fleetman:
+
+volumes:
+  mongo-data:
