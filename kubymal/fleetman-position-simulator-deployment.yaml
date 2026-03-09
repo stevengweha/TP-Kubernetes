@@ -21,7 +21,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: production-microservice
         - name: SPRING_JMS_BROKER_URL
-          value: tcp://fleetman-queue.fleetman.svc.cluster.local:61616  # Updated to use TCP protocol and correct port
+          value: tcp://fleetman-queue.fleetman.svc.cluster.local:61616  
         - name: MESSAGE_SIZE_LIMIT
           value: "1048576"
         ports:

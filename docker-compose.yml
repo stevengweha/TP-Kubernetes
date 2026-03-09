@@ -7,7 +7,10 @@ services:
       - 8161:8161
       - 61616:61616
     networks:
-      - fleetman
+      fleetman:
+        aliases:
+          - fleetman-queue
+          - fleetman-queue.default.svc.cluster.local
 
   fleetman-position-simulator:
     image: supinfo4kube/position-simulator:1.0.1
@@ -22,10 +25,15 @@ services:
     image: supinfo4kube/position-tracker:1.0.1
     ports:
       - 30010:8080
+    depends_on:
+      - fleetman-mongodb
+      - fleetman-queue
     environment:
       - SPRING_PROFILES_ACTIVE=local-microservice
     networks:
-      - fleetman
+      fleetman:
+        aliases:
+          - fleetman-position-tracker
 
   fleetman-api-gateway:
     image: supinfo4kube/api-gateway:1.0.1
@@ -34,7 +42,9 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=local-microservice
     networks:
-      - fleetman
+      fleetman:
+        aliases:
+          - fleetman-api-gateway
 
   fleetman-webapp:
     image: supinfo4kube/web-app:1.0.0-dockercompose
@@ -52,7 +62,10 @@ services:
     volumes:
       - mongo-data:/data/db
     networks:
-      - fleetman
+      fleetman:
+        aliases:
+          - fleetman-mongodb
+          - fleetman-mongodb.default.svc.cluster.local
 
 networks:
   fleetman:
